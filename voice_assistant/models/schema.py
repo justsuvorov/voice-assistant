@@ -1,4 +1,4 @@
-from sqlalchemy import select, Text, String
+from sqlalchemy import select, Text, String, update
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
 
 class Base(DeclarativeBase):
@@ -11,6 +11,7 @@ class VoiceMessage(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     file_path: Mapped[str] = mapped_column(String(500))  # Путь к .ogg
     transcription: Mapped[str] = mapped_column(Text)
+    result_post: Mapped[str] = mapped_column(Text, nullable=True)  # Готовый пост от Gemini
     style_tag: Mapped[str] = mapped_column(String(50), default="default")
 
 
@@ -42,3 +43,13 @@ class DBSpeakingObject:
 
     def close(self):
         self.connection.close()
+
+    def update_voice_post(self, message_id: int, post_text: str):
+        """Обновляет запись в БД, вставляя готовый текст поста."""
+        # Пример для SQLAlchemy:
+        statement = update(VoiceMessage).where(VoiceMessage.id == message_id).values(post_text=post_text)
+        self.connection.execute(statement)
+        self.connection.commit()
+
+    def __del__(self):
+        self.close()
