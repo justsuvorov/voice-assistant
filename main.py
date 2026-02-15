@@ -7,8 +7,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 import traceback
 
-import config
-
+from voice_assistant.ai.encoders import VoiceEncoder
+from voice_assistant.ai.preprocessor import Preprocessor, VoicePreprocessor, ProcessingTask
+from voice_assistant.ai.promt_builders import PromptEngine
+from voice_assistant.core.database import get_db_connection
+from voice_assistant.models.schema import DBSpeakingObject
 
 app = FastAPI()
 
@@ -26,13 +29,6 @@ class PostProcessor:
 class Report:
     pass
 
-
-class Preprocessor:
-    pass
-
-
-class DBSpeakingObject:
-    pass
 
 
 class AIModel:
@@ -67,9 +63,15 @@ class AIAssistantService:
 
 @app.post("/api/update")
 def main(request: APIRequest):
+    processing_task = ProcessingTask(message_id=request.message_id)
     ai = AIAssistantService(
-        preprocessor= Preprocessor(
-                            DBSpeakingObject(),
+        preprocessor= VoicePreprocessor(db_speaking_object=DBSpeakingObject(connection=get_db_connection()),
+                                        request=processing_task,
+                                        encoder=VoiceEncoder(model_name='base'),
+                                        prompt_engine=PromptEngine(role='default_role',
+                                                                   template='None'),
+
+
         ),
         postprocessor=PostProcessor(),
         ai_model= AIModel(),

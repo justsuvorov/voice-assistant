@@ -38,5 +38,3 @@ class VoicePreprocessor(Preprocessor):
             source_text=text_content,
             context=references
         )
-
-
