@@ -3,3 +3,5 @@ unicorn
 environs
 sqlalchemy
 pydantic_settings
+openai-whisper
+ffmpeg
