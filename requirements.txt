@@ -1,3 +1,5 @@
 fastapi
 unicorn
 environs
+sqlalchemy
+pydantic_settings
