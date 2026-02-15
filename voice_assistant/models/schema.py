@@ -1,6 +1,5 @@
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import Text, String
-
+from sqlalchemy import select, Text, String
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
 
 class Base(DeclarativeBase):
     pass
@@ -15,20 +14,14 @@ class VoiceMessage(Base):
     style_tag: Mapped[str] = mapped_column(String(50), default="default")
 
 
-from sqlalchemy.orm import Session
-from sqlalchemy import select
-from voice_assistant.core.database import SessionLocal
-
-
 class DBSpeakingObject:
-    def __init__(self, session: Session = None):
-        # Если сессия не передана (например, в скриптах), создаем свою
-        self.session = session or SessionLocal()
+    def __init__(self, connection: Session):
+        self.connection = connection
 
     def get_origin_data(self, message_id: int):
-        """Достает транскрипцию конкретного сообщения"""
+
         query = select(VoiceMessage).where(VoiceMessage.id == message_id)
-        result = self.session.execute(query).scalar_one_or_none()
+        result = self.connection.execute(query).scalar_one_or_none()
 
         if not result:
             raise ValueError(f"Сообщение с id {message_id} не найдено")
@@ -45,7 +38,7 @@ class DBSpeakingObject:
             .where(VoiceMessage.style_tag == "gold")
             .limit(limit)
         )
-        return self.session.execute(query).scalars().all()
+        return self.connection.execute(query).scalars().all()
 
     def close(self):
-        self.session.close()
+        self.connection.close()
