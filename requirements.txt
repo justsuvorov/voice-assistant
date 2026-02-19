@@ -5,3 +5,5 @@ sqlalchemy
 pydantic_settings
 openai-whisper
 ffmpeg
+pytest
+google-generativeai

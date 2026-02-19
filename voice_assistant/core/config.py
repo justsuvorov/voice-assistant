@@ -47,5 +47,7 @@ class Settings(BaseSettings):
 
     ### ИТОГОВЫЙ РЕЗУЛЬТАТ:
     """
+
+
 # Создаем экземпляр настроек (Singleton)
 settings = Settings()
