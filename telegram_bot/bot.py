@@ -1,65 +1,64 @@
 import asyncio
 import os
-import requests
+import httpx
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.types import Message
 from sqlalchemy.orm import Session
 
-# Импортируем твои настройки и модели
+# Используем твои настройки
 from voice_assistant.core.config import settings
 from voice_assistant.core.database import get_db_connection
 from voice_assistant.models.schema import VoiceMessage
 
-# Инициализация бота
-API_TOKEN = 'ТВОЙ_ТЕЛЕГРАМ_ТОКЕН'
-FASTAPI_URL = "http://localhost:8000/api/update"
-bot = Bot(token=API_TOKEN)
+# Инициализация бота из конфига
+bot = Bot(token=settings.telegram_bot_token)
 dp = Dispatcher()
+
+# ВАЖНО: 'api' — это имя сервиса из docker-compose.yaml
+FASTAPI_URL = "http://api:8000/api/update"
 
 
 @dp.message(F.voice)
 async def handle_voice(message: Message):
-    # 1. Информируем пользователя
-    status_msg = await message.answer("🎙 Голос получен. Начинаю обработку...")
+    status_msg = await message.answer("🎙 Сообщение получено. Начинаю обработку...")
 
-    # Создаем сессию БД
-    db: Session = get_db_connection()
+    # Используем контекстный менеджер для БД, чтобы сессия точно закрылась
+    db: Session = next(get_db_connection())
 
     try:
-        # 2. Скачивание файла
+        # 1. Скачивание файла
         file_id = message.voice.file_id
         file = await bot.get_file(file_id)
+
+        # Сохраняем в общую папку /app/uploads
         file_path = f"uploads/{file_id}.ogg"
         os.makedirs("uploads", exist_ok=True)
         await bot.download_file(file.file_path, file_path)
 
-        # 3. Создаем запись в БД (Initial state)
-        # Нам нужно получить ID для передачи в API
+        # 2. Создаем запись в БД
         new_voice = VoiceMessage(
             file_path=file_path,
-            transcription="pending",  # Будет обновлено позже внутри API
+            transcription="pending",
             style_tag="default"
         )
         db.add(new_voice)
         db.commit()
         db.refresh(new_voice)
 
-        message_id = new_voice.id
+        await status_msg.edit_text("⏳ Модель Whisper и Gemini работают...")
 
-        # 4. Запрос к твоему FastAPI сервису
-        await status_msg.edit_text("⏳ Нейросеть думает...")
-
-        payload = {"message_id": message_id}
-        response = requests.post(FASTAPI_URL, json=payload)
+        # 3. Асинхронный запрос к FastAPI
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            payload = {"message_id": new_voice.id}
+            response = await client.post(FASTAPI_URL, json=payload)
 
         if response.status_code == 200:
             result = response.json()
-            final_text = result["payload"]["text"]
-
-            # 5. Отправляем результат пользователю
-            await status_msg.edit_text(final_text, parse_mode="Markdown")
+            # Убедись, что структура JSON совпадает с ответом твоего API
+            final_text = result.get("payload", {}).get("text", "Текст не получен")
+            await status_msg.edit_text(f"✅ **Результат:**\n\n{final_text}", parse_mode="Markdown")
         else:
-            await status_msg.edit_text(f"❌ Ошибка сервера: {response.text}")
+            await status_msg.edit_text(f"❌ Ошибка API ({response.status_code}): {response.text}")
 
     except Exception as e:
         await status_msg.edit_text(f"💥 Произошла ошибка: {str(e)}")
@@ -68,7 +67,7 @@ async def handle_voice(message: Message):
 
 
 async def main():
-    print("Бот запущен...")
+    print("🚀 Бот запущен и готов к работе...")
     await dp.start_polling(bot)
 
 
