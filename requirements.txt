@@ -1,10 +1,12 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+torchaudio
 fastapi
-unicorn
+uvicorn
 environs
 sqlalchemy
 pydantic_settings
 openai-whisper
-ffmpeg
 pytest
 google-generativeai
 httpx
