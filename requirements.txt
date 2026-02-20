@@ -9,7 +9,6 @@ pytest
 google-generativeai
 httpx
 aiogram
-
 gunicorn
 psycopg2-binary
 python-multipart
