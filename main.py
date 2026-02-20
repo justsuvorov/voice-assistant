@@ -1,7 +1,7 @@
 from fastapi import FastAPI, status
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-
+import google.generativeai as genai
 
 from voice_assistant.ai.encoders import VoiceEncoder
 from voice_assistant.ai.model import AIModel, GeminiModel
@@ -17,13 +17,17 @@ from voice_assistant.reports.report_export import ReportExport
 import traceback
 
 from voice_assistant.services.assistant import AIAssistantService
+from voice_assistant.core.database import init_db
 
+# Вызываем сразу при загрузке модуля
+init_db()
 app = FastAPI()
 
 
 
 @app.post("/api/update")
 def main(request: APIRequest):
+
     processing_task = ProcessingTask(message_id=request.message_id)
     db_session = get_db_connection()
     db = DBSpeakingObject(connection=db_session)

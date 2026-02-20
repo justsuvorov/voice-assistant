@@ -18,7 +18,7 @@ class GeminiModel(AIModel):
         genai.configure(api_key=settings.gemini_api_key.get_secret_value())
 
         self._model = genai.GenerativeModel(
-            model_name=settings.model_name
+            model_name='gemini-2.0-flash-lite'#'gemini-2.0-flash'#settings.model_name
         )
 
 

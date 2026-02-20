@@ -11,7 +11,7 @@ from voice_assistant.core.database import get_db_connection
 from voice_assistant.models.schema import VoiceMessage
 
 # Инициализация бота из конфига
-bot = Bot(token=settings.telegram_bot_token)
+bot = Bot(token=settings.telegram_bot_token.get_secret_value())
 dp = Dispatcher()
 
 # ВАЖНО: 'api' — это имя сервиса из docker-compose.yaml
@@ -23,7 +23,7 @@ async def handle_voice(message: Message):
     status_msg = await message.answer("🎙 Сообщение получено. Начинаю обработку...")
 
     # Используем контекстный менеджер для БД, чтобы сессия точно закрылась
-    db: Session = next(get_db_connection())
+    db: Session = get_db_connection()
 
     try:
         # 1. Скачивание файла

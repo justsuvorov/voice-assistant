@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from voice_assistant.core.config import settings
-
+from voice_assistant.models.schema import Base
 
 engine = create_engine(
     settings.database_url,
@@ -26,3 +26,9 @@ def get_db_connection() -> Session:
     finally:
         # В FastAPI мы закроем это в блоке finally или через Depends
         pass
+
+def init_db():
+    Base.metadata.create_all(bind=engine)
+
+if __name__ == "__main__":
+    init_db()
