@@ -7,3 +7,5 @@ openai-whisper
 ffmpeg
 pytest
 google-generativeai
+httpx
+aiogram

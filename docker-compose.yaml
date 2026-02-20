@@ -1,5 +1,5 @@
 services:
-  # 1. Сервис базы данных PostgreSQL
+  # 1. База данных PostgreSQL
   db:
     image: postgres:15-alpine
     container_name: voice_db
@@ -18,28 +18,46 @@ services:
       timeout: 5s
       retries: 5
 
-  # 2. Основное FastAPI приложение
+  # 2. FastAPI (на базе образа tiangolo)
   api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: voice_api
+    build: .
+    container_name: fastapi
     restart: always
     depends_on:
       db:
         condition: service_healthy
-    env_file:
-      - .env
-    environment:
-      # ВАЖНО: здесь мы указываем хост 'db' (имя сервиса выше)
-      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-password}@db:5432/${DB_NAME:-voice_assistant}
+    env_file: .env
     ports:
-      - "8000:8000"
+      - "8000:80"  # Снаружи 8000, внутри образа tiangolo всегда 80
     volumes:
       - .:/app
       - ./uploads:/app/uploads
-    # Увеличиваем лимит памяти для работы Whisper
-    shm_size: '2gb'
+    environment:
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-password}@db:5432/${DB_NAME:-voice_assistant}
+      # Настройки Gunicorn (встроены в образ)
+      - MAX_WORKERS=2
+      - WEB_CONCURRENCY=2
+
+  # 3. Telegram Бот
+  bot:
+    build: .
+    container_name: voice_bot
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+      api:
+        condition: service_started
+    env_file: .env
+    volumes:
+      - .:/app
+      - ./uploads:/app/uploads
+    environment:
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-password}@db:5432/${DB_NAME:-voice_assistant}
+      # Бот обращается к API по имени сервиса и порту 80
+      - FASTAPI_URL=http://api:80/api/update
+    # Запускаем скрипт бота вместо uvicorn
+    entrypoint: ["python", "bot_main.py"]
 
 volumes:
   postgres_data:

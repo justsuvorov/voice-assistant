@@ -15,7 +15,7 @@ bot = Bot(token=settings.telegram_bot_token)
 dp = Dispatcher()
 
 # ВАЖНО: 'api' — это имя сервиса из docker-compose.yaml
-FASTAPI_URL = "http://api:8000/api/update"
+FASTAPI_URL = os.getenv("FASTAPI_URL", "http://api:80/api/update")
 
 
 @dp.message(F.voice)

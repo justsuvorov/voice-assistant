@@ -1,30 +1,36 @@
-# Используем легкий образ Python
-FROM python:3.11-slim
+FROM tiangolo/uvicorn-gunicorn-fastapi:python3.11
 
-# Устанавливаем системные зависимости
-# ffmpeg нужен для работы Whisper (конвертация аудио)
-# libpq-dev нужен для подключения к PostgreSQL
+# 1. Установка системных зависимостей
+# ffmpeg — нужен для Whisper (декодирование аудио)
+# libpq-dev — нужен для драйвера PostgreSQL (psycopg2)
 RUN apt-get update && apt-get install -y \
     ffmpeg \
     libpq-dev \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
-# Устанавливаем рабочую директорию
+# 2. Установка рабочей директории
+# В образе tiangolo стандартная папка — /app
 WORKDIR /app
 
-# Сначала копируем только requirements, чтобы закэшировать установку библиотек
+# 3. Установка Python-зависимостей
+# Сначала копируем только requirements.txt, чтобы Docker кэшировал слои
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
-# Копируем весь остальной код проекта
+# 4. Копирование кода проекта
 COPY . .
 
-# Создаем папку для загрузок, если её нет
-RUN mkdir -p uploads
+# 5. Подготовка папки для медиафайлов
+# Создаем папку uploads и даем права на запись
+RUN mkdir -p /app/uploads && chmod 777 /app/uploads
 
-# Открываем порт для FastAPI
-EXPOSE 8000
+# 6. Настройки среды
+# Отключаем создание .pyc файлов и включаем буферизацию логов
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
 
-# Команда для запуска (через uvicorn)
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# По умолчанию запускается FastAPI через Gunicorn (настройки в docker-compose)
+# Порт 80 — стандарт для этого базового образа
+EXPOSE 80
