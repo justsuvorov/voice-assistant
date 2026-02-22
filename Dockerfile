@@ -16,8 +16,10 @@ WORKDIR /app
 # 3. Установка Python-зависимостей
 # Сначала копируем только requirements.txt, чтобы Docker кэшировал слои
 COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir "socksio==1.0.0" && \
+    pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir "httpx[socks]>=0.28.0"
 
 # 4. Копирование кода проекта
 COPY . .

@@ -14,3 +14,5 @@ aiogram
 gunicorn
 psycopg2-binary
 python-multipart
+httpx[socks]
+socksio>=1.0.0

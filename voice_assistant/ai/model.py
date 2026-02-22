@@ -15,7 +15,8 @@ class AIModel(ABC):
 class GeminiModel(AIModel):
     def __init__(self):
 
-        genai.configure(api_key=settings.gemini_api_key.get_secret_value())
+        genai.configure(api_key=settings.gemini_api_key.get_secret_value(),
+                        transport='rest')
 
         self._model = genai.GenerativeModel(
             model_name=settings.model_name
@@ -49,4 +50,5 @@ class GeminiModel(AIModel):
 
         except Exception as e:
             # Пробрасываем ошибку выше для обработки в main.py
-            raise RuntimeError(f"Ошибка Gemini API: {str(e)}")
+            print( RuntimeError(f"Ошибка Gemini API: {str(e)}"))
+            return query

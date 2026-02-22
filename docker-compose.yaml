@@ -1,9 +1,9 @@
 services:
-  # 1. База данных PostgreSQL
   db:
     image: postgres:15-alpine
     container_name: voice_db
     restart: always
+    env_file: .env
     environment:
       - POSTGRES_USER=${DB_USER:-postgres}
       - POSTGRES_PASSWORD=${DB_PASSWORD:-password}
@@ -18,7 +18,22 @@ services:
       timeout: 5s
       retries: 5
 
-  # 2. FastAPI (на базе образа tiangolo)
+  # 2. Shadowsocks Клиент (Туннель через XEOVO)
+  ss-client:
+    image: shadowsocks/shadowsocks-libev
+    container_name: ss_client
+    restart: always
+    env_file: .env
+    command: >
+      ss-local 
+      -s ${SS_ADDRESS} 
+      -p ${SS_PORT} 
+      -k "${SS_PASSWORD}" 
+      -m chacha20-ietf-poly1305
+      -b 0.0.0.0 
+      -l 1080
+
+  # 3. FastAPI (Сервис обработки и API)
   api:
     build: .
     container_name: fastapi
@@ -26,19 +41,22 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      ss-client:
+        condition: service_started
     env_file: .env
     ports:
-      - "8000:80"  # Снаружи 8000, внутри образа tiangolo всегда 80
+      - "8000:80"
     volumes:
       - .:/app
       - ./uploads:/app/uploads
     environment:
       - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-password}@db:5432/${DB_NAME:-voice_assistant}
-      # Настройки Gunicorn (встроены в образ)
       - MAX_WORKERS=2
       - WEB_CONCURRENCY=2
 
-  # 3. Telegram Бот
+      - HTTP_PROXY=${PROXY_URL}
+      - HTTPS_PROXY=${PROXY_URL}
+
   bot:
     build: .
     container_name: voice_bot
@@ -48,15 +66,17 @@ services:
         condition: service_healthy
       api:
         condition: service_started
+      ss-client:
+        condition: service_started
     env_file: .env
     volumes:
       - .:/app
       - ./uploads:/app/uploads
     environment:
       - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-password}@db:5432/${DB_NAME:-voice_assistant}
-      # Бот обращается к API по имени сервиса и порту 80
       - FASTAPI_URL=http://api:80/api/update
-    # Запускаем скрипт бота вместо uvicorn
+      - HTTP_PROXY=${PROXY_URL}
+      - HTTPS_PROXY=${PROXY_URL}
     entrypoint: ["python", "bot_main.py"]
 
 volumes:
