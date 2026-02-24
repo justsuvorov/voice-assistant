@@ -11,7 +11,6 @@ RUN apt-get update && apt-get install -y \
 
 
 # 2. Установка рабочей директории
-# В образе tiangolo стандартная папка — /app
 WORKDIR /app
 
 # 3. Установка Python-зависимостей
