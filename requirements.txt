@@ -8,7 +8,7 @@ sqlalchemy
 pydantic_settings
 openai-whisper
 pytest
-google-generativeai
+google-genai
 httpx
 aiogram
 gunicorn

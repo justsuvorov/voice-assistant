@@ -1,4 +1,4 @@
-import google.generativeai as genai
+from google import genai
 from abc import ABC, abstractmethod
 from voice_assistant.core.config import settings
 
@@ -15,15 +15,11 @@ class AIModel(ABC):
 class GeminiModel(AIModel):
     def __init__(self):
 
-        genai.configure(api_key=settings.gemini_api_key.get_secret_value(),
-                        transport='rest')
 
-        self._model = genai.GenerativeModel(
-            model_name=settings.model_name
-        )
+        self._client = genai.Client(api_key=settings.gemini_api_key.get_secret_value(),
+                                    )
 
-
-        self._generation_config = genai.types.GenerationConfig(
+        self._generation_config = genai.types.GenerateContentConfig(
             temperature=settings.ai_temperature,
             top_p=0.95,
             top_k=64,
@@ -37,9 +33,10 @@ class GeminiModel(AIModel):
         print(query)
         try:
             # Выполняем запрос
-            response = self._model.generate_content(
-                query,
-                generation_config=self._generation_config
+            response = self._client.models.generate_content(
+                model=settings.model_name,
+                contents=query,
+                config=self._generation_config
             )
 
             # Проверка на наличие текста (защита от блокировок Safety Settings)
