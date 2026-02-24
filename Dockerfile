@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
+
 # 2. Установка рабочей директории
 # В образе tiangolo стандартная папка — /app
 WORKDIR /app
@@ -21,6 +22,7 @@ RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
     pip install --no-cache-dir -r requirements.txt && \
     pip install --no-cache-dir "httpx[socks]>=0.28.0"
 
+RUN python -c "import whisper; whisper.load_model('base')"
 # 4. Копирование кода проекта
 COPY . .
 

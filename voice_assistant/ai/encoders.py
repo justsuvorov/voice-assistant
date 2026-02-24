@@ -16,6 +16,7 @@ class VoiceEncoder(Encoder):
         """
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model_name = model_name
+        self._model = whisper.load_model(self.model_name, device=self.device)
 
     def prepared_data(self, file_path: str) -> str:
         """
@@ -26,8 +27,8 @@ class VoiceEncoder(Encoder):
 
         try:
 
-            model = whisper.load_model(self.model_name, device=self.device)
-            result = model.transcribe(
+
+            result = self._model.transcribe(
                 audio=file_path,
                 language="ru",
                 fp16=(self.device == "cuda"),

@@ -1,7 +1,6 @@
 from fastapi import FastAPI, status
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-import google.generativeai as genai
 
 from voice_assistant.ai.encoders import VoiceEncoder
 from voice_assistant.ai.model import AIModel, GeminiModel
