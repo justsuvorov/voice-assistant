@@ -24,6 +24,8 @@ services:
     container_name: ss_client
     restart: always
     env_file: .env
+    ports:
+      - "1080:1080" # ВАЖНО: пробрасываем порт на локальную машину
     command: >
       ss-local 
       -s ${SS_ADDRESS} 
@@ -75,8 +77,9 @@ services:
     environment:
       - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-password}@db:5432/${DB_NAME:-voice_assistant}
       - FASTAPI_URL=http://api:80/api/update
-      - HTTP_PROXY=${PROXY_URL}
-      - HTTPS_PROXY=${PROXY_URL}
+    #  - HTTP_PROXY=${PROXY_URL}
+    #  - HTTPS_PROXY=${PROXY_URL}
+      - NO_PROXY=api,db,localhost,127.0.0.1
     entrypoint: ["python", "bot_main.py"]
 
 volumes:

@@ -48,7 +48,7 @@ async def handle_voice(message: Message):
         await status_msg.edit_text("⏳ Модель Whisper и Gemini работают...")
 
         # 3. Асинхронный запрос к FastAPI
-        async with httpx.AsyncClient(timeout=120.0) as client:
+        async with httpx.AsyncClient(timeout=300.0) as client:
             payload = {"message_id": new_voice.id}
             response = await client.post(FASTAPI_URL, json=payload)
 

@@ -23,22 +23,23 @@ from voice_assistant.core.database import init_db
 init_db()
 app = FastAPI()
 
-
+voice_encoder = VoiceEncoder(model_name='base')
 
 @app.post("/api/update")
 def main(request: APIRequest):
 
     processing_task = ProcessingTask(message_id=request.message_id)
+    print('Запрос получен'+str(request.message_id), flush=True)
     db_session = get_db_connection()
     db = DBSpeakingObject(connection=db_session)
+    print('Запрос запуск обработки',  flush=True)
     ai = AIAssistantService(
         preprocessor= VoicePreprocessor(db_speaking_object=db,
                                         request=processing_task,
-                                        encoder=VoiceEncoder(model_name='base'),
+                                        encoder=voice_encoder,
                                         prompt_engine=PromptEngine(role=settings.ai_role,
-                                                                   template=settings.ai_prompt_template),
-
-
+                                                                   template=settings.ai_prompt_template,
+                                                                   ),
         ),
         postprocessor=PostProcessor(),
         ai_model= GeminiModel(),
