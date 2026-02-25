@@ -47,7 +47,7 @@ class DBSpeakingObject:
     def update_voice_post(self, message_id: int, post_text: str):
         """Обновляет запись в БД, вставляя готовый текст поста."""
         # Пример для SQLAlchemy:
-        statement = update(VoiceMessage).where(VoiceMessage.id == message_id).values(post_text=post_text)
+        statement = update(VoiceMessage).where(VoiceMessage.id == message_id).values(result_post=post_text)
         self.connection.execute(statement)
         self.connection.commit()
 
