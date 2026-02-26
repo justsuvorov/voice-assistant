@@ -34,6 +34,15 @@ services:
       -m chacha20-ietf-poly1305
       -b 0.0.0.0 
       -l 1080
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    ulimits:
+      nofile:
+        soft: 1024
+        hard: 2048
 
   # 3. FastAPI (Сервис обработки и API)
   api:
