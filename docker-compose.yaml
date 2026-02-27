@@ -44,6 +44,7 @@ services:
         soft: 1024
         hard: 2048
 
+
   # 3. FastAPI (Сервис обработки и API)
   api:
     build: .
