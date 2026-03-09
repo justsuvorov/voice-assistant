@@ -32,6 +32,21 @@ class PostProcessor:
 
         # 4. Нормализуем пробелы и пустые строки (не более двух переносов подряд)
         clean_text = re.sub(r'\n{3,}', '\n\n', clean_text)
+        clean_text = self._escape_for_markdown_v2(clean_text)
 
         return clean_text.strip()
 
+    def _escape_for_markdown_v2(self, text: str) -> str:
+        # 1. Экранируем все стандартные спецсимволы (кроме звездочки)
+        escape_chars = r'_[]()~`>#+-=|{}.!'
+        text = re.sub(f'([{re.escape(escape_chars)}])', r'\\\1', text)
+
+        # 2. Экранируем точки после цифр (списки 1\. 2\.)
+        text = re.sub(r'(\d+)\.', r'\1\.', text)
+
+        # 3. Хитрый трюк со звездочками:
+        # Нам нужно сохранить **, но экранировать одиночные *.
+        # Используем негативный lookbehind и lookahead, чтобы найти * не рядом с другой *
+        text = re.sub(r'(?<!\*)\*(?!\*)', r'\*', text)
+
+        return text
