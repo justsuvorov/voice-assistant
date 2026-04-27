@@ -3,6 +3,7 @@ import os
 import httpx
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.types import Message
+from aiogram.client.session.aiohttp import AiohttpSession
 from sqlalchemy.orm import Session
 
 # Используем твои настройки
@@ -10,8 +11,10 @@ from voice_assistant.core.config import settings
 from voice_assistant.core.database import get_db_connection
 from voice_assistant.models.schema import VoiceMessage
 
-# Инициализация бота из конфига
-bot = Bot(token=settings.telegram_bot_token.get_secret_value())
+# Инициализация бота из конфига — явно передаём прокси, т.к. aiohttp не читает env автоматически
+_proxy_url = os.getenv("HTTPS_PROXY") or os.getenv("HTTP_PROXY")
+_session = AiohttpSession(proxy=_proxy_url) if _proxy_url else None
+bot = Bot(token=settings.telegram_bot_token.get_secret_value(), session=_session)
 dp = Dispatcher()
 
 # ВАЖНО: 'api' — это имя сервиса из docker-compose.yaml

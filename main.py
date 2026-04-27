@@ -41,7 +41,7 @@ def main(request: APIRequest):
                                                                    ),
         ),
         postprocessor=PostProcessor(),
-        ai_model= GeminiModel(),
+        ai_model=GeminiModel(),
         report_export=ReportExport(db, processing_task),
     )
 
@@ -50,7 +50,7 @@ def main(request: APIRequest):
         status_code = status.HTTP_200_OK
         return JSONResponse(content=jsonable_encoder(response), status_code=status_code)
     except Exception as exc:
-        response = {"error": traceback.format_exc(exc)}
+        response = {"error": traceback.format_exc()}
         status_code = status.HTTP_400_BAD_REQUEST
 
         return JSONResponse(content=jsonable_encoder(response), status_code=status_code)
